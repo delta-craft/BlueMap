@@ -24,9 +24,6 @@
  */
 package de.bluecolored.bluemap.common.plugin.skins;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
@@ -35,123 +32,82 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
-import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.*;
 
 @DebugDump
 public class PlayerSkin {
-	
-	private final UUID uuid;
-	private long lastUpdate;
 
-	public PlayerSkin(UUID uuid) {
-		this.uuid = uuid;
-		this.lastUpdate = -1;
-	}
-	
-	public void update(File storageFolder, File fallback) {
-		long now = System.currentTimeMillis();
-		if (lastUpdate > 0 && lastUpdate + 600000 > now) return; // only update if skin is older than 10 minutes
-		
-		lastUpdate = now;
-		
-		new Thread(() -> {
-			BufferedImage head = null;
+    private final UUID uuid;
+    private long lastUpdate;
 
-			try {
-				Future<BufferedImage> futureSkin = loadSkin();
-				BufferedImage skin = futureSkin.get(10, TimeUnit.SECONDS);
-				head = createHead(skin);
-			} catch (ExecutionException | TimeoutException e) {
-				Logger.global.logDebug("Failed to load player-skin from mojang-servers: " + e);
-			} catch (InterruptedException ignore) {
-				Thread.currentThread().interrupt();
-				return;
-			}
+    public PlayerSkin(UUID uuid) {
+        this.uuid = uuid;
+        this.lastUpdate = -1;
+    }
 
-			try {
-				if (head == null) head = ImageIO.read(fallback);
-				ImageIO.write(head, "png", new File(storageFolder, uuid.toString() + ".png"));
-			} catch (IOException e) {
-				Logger.global.logError("Failed to write player-head image!", e);
-			}
-		}).start();
-	}
-	
-	public BufferedImage createHead(BufferedImage skinTexture) {
-		BufferedImage head = new BufferedImage(8,  8, skinTexture.getType());
-		
-		BufferedImage layer1 = skinTexture.getSubimage(8, 8, 8, 8);
-		BufferedImage layer2 = skinTexture.getSubimage(40, 8, 8, 8);
-		
-		try {
-			Graphics2D g = head.createGraphics();
-			g.drawImage(layer1, 0, 0, null);
-			g.drawImage(layer2, 0, 0, null);
-		} catch (Throwable t) { // There might be problems with headless servers when loading the graphics class, so we catch every exception and error on purpose here
-			Logger.global.noFloodWarning("headless-graphics-fail", 
-					"Could not access Graphics2D to render player-skin texture. Try adding '-Djava.awt.headless=true' to your startup flags or ignore this warning.");
-			
-			layer1.copyData(head.getRaster());
-		}
-		
-		return head;
-	}
-	
-	public Future<BufferedImage> loadSkin() {
-		CompletableFuture<BufferedImage> image = new CompletableFuture<>();
-		
-		new Thread(() -> {
-			try {
-				JsonParser parser = new JsonParser();
-				try (Reader reader = requestProfileJson()) {
-					String textureInfoJson = readTextureInfoJson(parser.parse(reader));
-					String textureUrl = readTextureUrl(parser.parse(textureInfoJson));
-					image.complete(ImageIO.read(new URL(textureUrl)));
-				}
-			} catch (IOException e) {
-				image.completeExceptionally(e);
-			}
-		}).start();
-		
-		return image;
-	}
-	
-	private Reader requestProfileJson() throws IOException {
-		URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + this.uuid);
-		return new InputStreamReader(url.openStream());
-	}
-	
-	private String readTextureInfoJson(JsonElement json) throws IOException {
-		try {
-			JsonArray properties = json.getAsJsonObject().getAsJsonArray("properties");
-			
-			for (JsonElement element : properties) {
-				if (element.getAsJsonObject().get("name").getAsString().equals("textures")) {
-					return new String(Base64.getDecoder().decode(element.getAsJsonObject().get("value").getAsString().getBytes()));
-				}
-			}
-			
-			throw new IOException("No texture info found!");
-		} catch (NullPointerException | IllegalStateException | ClassCastException e) {
-			throw new IOException(e);
-		}
-		
-	}
-	
-	private String readTextureUrl(JsonElement json) throws IOException {
-		try {
-			return json.getAsJsonObject()
-					.getAsJsonObject("textures")
-					.getAsJsonObject("SKIN")
-					.get("url").getAsString();
-		} catch (NullPointerException | IllegalStateException | ClassCastException e) {
-			throw new IOException(e);
-		}
-	}
-	
+    public void update(File storageFolder, File fallback) {
+        long now = System.currentTimeMillis();
+        if (lastUpdate > 0 && lastUpdate + 600000 > now) return; // only update if skin is older than 10 minutes
+
+        lastUpdate = now;
+
+        new Thread(() -> {
+            BufferedImage head = null;
+
+            try {
+                Future<BufferedImage> futureSkin = loadSkin();
+                BufferedImage skin = futureSkin.get(10, TimeUnit.SECONDS);
+                head = createHead(skin);
+            } catch (ExecutionException | TimeoutException e) {
+                Logger.global.logDebug("Failed to load player-skin from mojang-servers: " + e);
+            } catch (InterruptedException ignore) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+
+            try {
+                if (head == null) head = ImageIO.read(fallback);
+                ImageIO.write(head, "png", new File(storageFolder, uuid.toString() + ".png"));
+            } catch (IOException e) {
+                Logger.global.logError("Failed to write player-head image!", e);
+            }
+        }).start();
+    }
+
+    public BufferedImage createHead(BufferedImage skinTexture) {
+        BufferedImage head = new BufferedImage(8, 8, skinTexture.getType());
+
+        BufferedImage layer1 = skinTexture.getSubimage(8, 8, 8, 8);
+        BufferedImage layer2 = skinTexture.getSubimage(40, 8, 8, 8);
+
+        try {
+            Graphics2D g = head.createGraphics();
+            g.drawImage(layer1, 0, 0, null);
+            g.drawImage(layer2, 0, 0, null);
+        } catch (Throwable t) { // There might be problems with headless servers when loading the graphics class, so we catch every exception and error on purpose here
+            Logger.global.noFloodWarning("headless-graphics-fail",
+                    "Could not access Graphics2D to render player-skin texture. Try adding '-Djava.awt.headless=true' to your startup flags or ignore this warning.");
+
+            layer1.copyData(head.getRaster());
+        }
+
+        return head;
+    }
+
+    public Future<BufferedImage> loadSkin() {
+        CompletableFuture<BufferedImage> image = new CompletableFuture<>();
+
+        new Thread(() -> {
+            try {
+                URL imageUrl = new URL("https://portal.deltacraft.eu/api/plugin/skin?uuid=" + this.uuid.toString());
+                image.complete(ImageIO.read(imageUrl));
+            } catch (IOException e) {
+                image.completeExceptionally(e);
+            }
+        }).start();
+
+        return image;
+    }
 }
