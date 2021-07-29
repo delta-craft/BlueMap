@@ -101,7 +101,7 @@ public class PlayerSkin {
 
         new Thread(() -> {
             try {
-                URL imageUrl = new URL("https://portal.deltacraft.eu/api/plugin/skin?uuid=" + this.uuid.toString());
+                URL imageUrl = new URL("https://api.deltacraft.eu/embed/player-head/" + this.uuid.toString());
                 image.complete(ImageIO.read(imageUrl));
             } catch (IOException e) {
                 image.completeExceptionally(e);
