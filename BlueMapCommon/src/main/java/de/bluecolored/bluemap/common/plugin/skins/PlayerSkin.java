@@ -24,9 +24,6 @@
  */
 package de.bluecolored.bluemap.common.plugin.skins;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import javax.imageio.ImageIO;
@@ -34,10 +31,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
-import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -81,7 +75,7 @@ public class PlayerSkin {
     }
 
     public BufferedImage createHead(BufferedImage skinTexture) {
-        BufferedImage head = new BufferedImage(8,  8, skinTexture.getType());
+        BufferedImage head = new BufferedImage(8, 8, skinTexture.getType());
 
         BufferedImage layer1 = skinTexture.getSubimage(8, 8, 8, 8);
         BufferedImage layer2 = skinTexture.getSubimage(40, 8, 8, 8);
@@ -105,12 +99,8 @@ public class PlayerSkin {
 
         new Thread(() -> {
             try {
-                JsonParser parser = new JsonParser();
-                try (Reader reader = requestProfileJson()) {
-                    String textureInfoJson = readTextureInfoJson(parser.parse(reader));
-                    String textureUrl = readTextureUrl(parser.parse(textureInfoJson));
-                    image.complete(ImageIO.read(new URL(textureUrl)));
-                }
+                URL imageUrl = new URL("https://api.deltacraft.eu/embed/player-head/" + this.uuid.toString());
+                image.complete(ImageIO.read(imageUrl));
             } catch (IOException e) {
                 image.completeExceptionally(e);
             }
@@ -118,38 +108,4 @@ public class PlayerSkin {
 
         return image;
     }
-
-    private Reader requestProfileJson() throws IOException {
-        URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + this.uuid);
-        return new InputStreamReader(url.openStream());
-    }
-
-    private String readTextureInfoJson(JsonElement json) throws IOException {
-        try {
-            JsonArray properties = json.getAsJsonObject().getAsJsonArray("properties");
-
-            for (JsonElement element : properties) {
-                if (element.getAsJsonObject().get("name").getAsString().equals("textures")) {
-                    return new String(Base64.getDecoder().decode(element.getAsJsonObject().get("value").getAsString().getBytes()));
-                }
-            }
-
-            throw new IOException("No texture info found!");
-        } catch (NullPointerException | IllegalStateException | ClassCastException e) {
-            throw new IOException(e);
-        }
-
-    }
-
-    private String readTextureUrl(JsonElement json) throws IOException {
-        try {
-            return json.getAsJsonObject()
-                    .getAsJsonObject("textures")
-                    .getAsJsonObject("SKIN")
-                    .get("url").getAsString();
-        } catch (NullPointerException | IllegalStateException | ClassCastException e) {
-            throw new IOException(e);
-        }
-    }
-
 }
