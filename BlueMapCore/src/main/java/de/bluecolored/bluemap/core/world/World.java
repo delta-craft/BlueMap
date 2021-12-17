@@ -30,7 +30,6 @@ import com.flowpowered.math.vector.Vector3i;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 /**
  * Represents a World on the Server<br>
@@ -39,70 +38,58 @@ import java.util.function.Predicate;
  */
 public interface World {
 
-	String getName();
-	
-	UUID getUUID();
-	
-	Path getSaveFolder();
-	
-	int getSeaLevel();
-	
-	Vector3i getSpawnPoint();
-	
-	int getMaxY(int x, int z);
-	
-	int getMinY(int x, int z);
+    String getName();
 
-	Grid getChunkGrid();
+    UUID getUUID();
 
-	Grid getRegionGrid();
+    Path getSaveFolder();
 
-	/**
-	 * Returns the {@link Biome} on the specified position or the default biome if the block is not generated yet.
-	 */
-	Biome getBiome(int x, int y, int z);
-	
-	/**
-	 * Returns the {@link Block} on the specified position or an air-block if the block is not generated yet.
-	 */
-	Block getBlock(Vector3i pos);
-	
-	/**
-	 * Returns the {@link Block} on the specified position or an air-block if the block is not generated yet.
-	 */
-	default Block getBlock(int x, int y, int z) {
-		return getBlock(new Vector3i(x, y, z));
-	}
+    int getSkyLight();
 
-	/**
-	 * Returns the {@link Chunk} on the specified chunk-position
-	 */
-	Chunk getChunk(int x, int z);
+    Vector3i getSpawnPoint();
 
-	/**
-	 * Returns the Chunk on the specified chunk-position
-	 */
-	Region getRegion(int x, int z);
+    int getMaxY(int x, int z);
 
-	/**
-	 * Returns a collection of all regions in this world.
-	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
-	 */
-	Collection<Vector2i> listRegions();
+    int getMinY(int x, int z);
 
-	/**
-	 * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
-	 */
-	void invalidateChunkCache();
+    Grid getChunkGrid();
 
-	/**
-	 * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
-	 */
-	void invalidateChunkCache(int x, int z);
-	
-	/**
-	 * Cleans up invalid cache-entries to free up memory
-	 */
-	void cleanUpChunkCache();
-	
+    Grid getRegionGrid();
+
+    /**
+     * Returns the {@link Chunk} on the specified block-position
+     */
+    Chunk getChunkAtBlock(int x, int y, int z);
+
+    /**
+     * Returns the {@link Chunk} on the specified chunk-position
+     */
+    Chunk getChunk(int x, int z);
+
+    /**
+     * Returns the {@link Region} on the specified region-position
+     */
+    Region getRegion(int x, int z);
+
+    /**
+     * Returns a collection of all regions in this world.
+     * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
+     */
+    Collection<Vector2i> listRegions();
+
+    /**
+     * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
+     */
+    void invalidateChunkCache();
+
+    /**
+     * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
+     */
+    void invalidateChunkCache(int x, int z);
+
+    /**
+     * Cleans up invalid cache-entries to free up memory
+     */
+    void cleanUpChunkCache();
+
 }

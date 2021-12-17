@@ -24,96 +24,108 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector4f;
-
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
-import de.bluecolored.bluemap.core.util.MathUtils;
+import de.bluecolored.bluemap.core.util.math.Color;
 import org.spongepowered.configurate.ConfigurationNode;
 
+@DebugDump
 public class Biome {
 
-	public static final Biome DEFAULT = new Biome();
-	
-	private String id = "ocean";
-	private int numeralId = 0;
-	private float humidity = 0.5f;
-	private float temp = 0.5f;
-	private Vector3f waterColor = MathUtils.color3FromInt(4159204);
+    public static final Biome DEFAULT = new Biome("minecraft:ocean");
 
-	private Vector4f overlayFoliageColor = Vector4f.ZERO;
-	private Vector4f overlayGrassColor = Vector4f.ZERO;
-	
-	private Biome() {}
-	
-	public Biome(String id, int numeralId, float humidity, float temp, Vector3f waterColor) {
-		this.id = id;
-		this.numeralId = numeralId;
-		this.humidity = humidity;
-		this.temp = temp;
-		this.waterColor = waterColor;
-	}
-	
-	public Biome(String id, int numeralId, float humidity, float temp, Vector3f waterColor, Vector4f overlayFoliageColor, Vector4f overlayGrassColor) {
-		this (id, numeralId, humidity, temp, waterColor);
-		
-		this.overlayFoliageColor = overlayFoliageColor;
-		this.overlayGrassColor = overlayGrassColor;
-	}
+    private final String namespace;
+    private final String id;
+    private final String fullId;
+    private float humidity = 0.5f;
+    private float temp = 0.5f;
+    private final Color waterColor = new Color().set(4159204).premultiplied();
 
-	public String getId() {
-		return id;
-	}
+    private final Color overlayFoliageColor = new Color().premultiplied();
+    private final Color overlayGrassColor = new Color().premultiplied();
 
-	public int getNumeralId() {
-		return numeralId;
-	}
+    public Biome(String id) {
+        //resolve namespace
+        String namespace = "minecraft";
+        int namespaceSeperator = id.indexOf(':');
+        if (namespaceSeperator > 0) {
+            namespace = id.substring(0, namespaceSeperator);
+            id = id.substring(namespaceSeperator + 1);
+        }
 
-	public float getHumidity() {
-		return humidity;
-	}
+        this.id = id;
+        this.namespace = namespace;
+        this.fullId = namespace + ":" + id;
+    }
 
-	public float getTemp() {
-		return temp;
-	}
+    public Biome(String id, float humidity, float temp, Color waterColor) {
+        this(id);
+        this.humidity = humidity;
+        this.temp = temp;
+        this.waterColor.set(waterColor);
+    }
 
-	public Vector3f getWaterColor() {
-		return waterColor;
-	}
+    public Biome(String id, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
+        this (id, humidity, temp, waterColor);
+        this.overlayFoliageColor.set(overlayFoliageColor);
+        this.overlayGrassColor.set(overlayGrassColor);
+    }
 
-	public Vector4f getOverlayFoliageColor() {
-		return overlayFoliageColor;
-	}
+    public String getNamespace() {
+        return namespace;
+    }
 
-	public Vector4f getOverlayGrassColor() {
-		return overlayGrassColor;
-	}
-	
-	public static Biome create(String id, ConfigurationNode node) {
-		Biome biome = new Biome();
-		
-		biome.id = id;
-		biome.numeralId = node.node("id").getInt(biome.numeralId);
-		biome.humidity = node.node("humidity").getFloat(biome.humidity);
-		biome.temp = node.node("temp").getFloat(biome.temp);
-		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readColorInt(node.node("watercolor"))); 				} catch (NumberFormatException ignored) {}
-		try { biome.overlayFoliageColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.node("foliagecolor"))); 	} catch (NumberFormatException ignored) {}
-		try { biome.overlayGrassColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.node("grasscolor"))); 		} catch (NumberFormatException ignored) {}
-		
-		return biome;
-	}
-	
-	@Override
-	public String toString() {
-		return "Biome{" +
-			   "id='" + id + '\'' +
-			   ", numeralId=" + numeralId +
-			   ", humidity=" + humidity +
-			   ", temp=" + temp +
-			   ", waterColor=" + waterColor +
-			   ", overlayFoliageColor=" + overlayFoliageColor +
-			   ", overlayGrassColor=" + overlayGrassColor +
-			   '}';
-	}
-	
+    public String getId() {
+        return id;
+    }
+
+    public String getFullId() {
+        return fullId;
+    }
+
+    public float getHumidity() {
+        return humidity;
+    }
+
+    public float getTemp() {
+        return temp;
+    }
+
+    public Color getWaterColor() {
+        return waterColor;
+    }
+
+    public Color getOverlayFoliageColor() {
+        return overlayFoliageColor;
+    }
+
+    public Color getOverlayGrassColor() {
+        return overlayGrassColor;
+    }
+
+    public static Biome create(String id, ConfigurationNode node) {
+        Biome biome = new Biome(id);
+        biome.humidity = (float) node.node("humidity").getDouble(biome.humidity);
+        biome.temp = (float) node.node("temp").getDouble(biome.temp);
+        try { biome.waterColor.set(ConfigUtils.readColorInt(node.node("watercolor"))).premultiplied(); 				} catch (NumberFormatException ignored) {}
+        try { biome.overlayFoliageColor.set(ConfigUtils.readColorInt(node.node("foliagecolor"))).premultiplied(); 	} catch (NumberFormatException ignored) {}
+        try { biome.overlayGrassColor.set(ConfigUtils.readColorInt(node.node("grasscolor"))).premultiplied(); 		} catch (NumberFormatException ignored) {}
+
+        return biome;
+    }
+
+    @Override
+    public String toString() {
+        return "Biome{" +
+               "id='" + id + '\'' +
+               ", namespace=" + namespace +
+               ", fullId=" + fullId +
+               ", humidity=" + humidity +
+               ", temp=" + temp +
+               ", waterColor=" + waterColor +
+               ", overlayFoliageColor=" + overlayFoliageColor +
+               ", overlayGrassColor=" + overlayGrassColor +
+               '}';
+    }
+
 }

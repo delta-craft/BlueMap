@@ -12,7 +12,7 @@ Some features and some blocks are still missing. Especially some tile-entities w
 You can choose a version and download BlueMap from [here](https://github.com/BlueMap-Minecraft/BlueMap/releases).
 
 ### Using BlueMap
-BlueMap can be used on the command-line, or as a plugin/mod for your Sponge/Spigot/Paper/Forge/Fabric-Server. Read the [wiki](https://github.com/BlueMap-Minecraft/BlueMap/wiki) to get started!
+BlueMap can be used on the command-line, or as a plugin/mod for your Sponge/Spigot/Paper/Forge/Fabric-Server. Read the [wiki](https://bluemap.bluecolored.de/wiki/) to get started!
 
 ### Clone
 If you have git installed, simply use the command `git clone --recursive https://github.com/BlueMap-Minecraft/BlueMap.git` to clone BlueMap.
@@ -44,4 +44,5 @@ This means we always can decide to not accept a PR for any reason.
 ---
 
 [![JetBrainsLogo](https://bluecolored.de/paste/jetbrains-variant-4.svg)](https://www.jetbrains.com/?from=BlueMap)<br>
+<br>
 Special thanks to [JetBrains](https://www.jetbrains.com/?from=BlueMap) for giving out an OpenSource-Licence for BlueMap development!

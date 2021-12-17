@@ -24,34 +24,32 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 
 public class EmptyChunk extends MCAChunk {
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+    public static final MCAChunk INSTANCE = new EmptyChunk();
 
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
+    @Override
+    public boolean isGenerated() {
+        return false;
+    }
 
-	@Override
-	public BlockState getBlockState(Vector3i pos) {
-		return BlockState.AIR;
-	}
+    @Override
+    public BlockState getBlockState(int x, int y, int z) {
+        return BlockState.AIR;
+    }
 
-	@Override
-	public LightData getLightData(Vector3i pos) {
-		return LightData.ZERO;
-	}
+    @Override
+    public LightData getLightData(int x, int y, int z, LightData target) {
+        return target.set(0, 0);
+    }
 
-	@Override
-	public Biome getBiome(int x, int y, int z) {
-		return Biome.DEFAULT;
-	}
-	
+    @Override
+    public String getBiome(int x, int y, int z) {
+        return Biome.DEFAULT.getFullId();
+    }
+
 }

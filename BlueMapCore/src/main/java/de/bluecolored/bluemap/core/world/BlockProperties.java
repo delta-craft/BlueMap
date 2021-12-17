@@ -24,29 +24,124 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.util.Tristate;
+
+@DebugDump
 public class BlockProperties {
 
-	public static final BlockProperties SOLID = new BlockProperties(true, true, false);
-	public static final BlockProperties TRANSPARENT = new BlockProperties(false, false, false);
-	
-	private final boolean culling, occluding, flammable;
-	
-	public BlockProperties(boolean culling, boolean occluding, boolean flammable) {
-		this.culling = culling;
-		this.occluding = occluding;
-		this.flammable = flammable;
-	}
-	
-	public boolean isCulling() {
-		return culling;
-	}
-	
-	public boolean isOccluding() {
-		return occluding;
-	}
-	
-	public boolean isFlammable() {
-		return flammable;
-	}
-	
+    public static final BlockProperties DEFAULT = new BlockProperties();
+
+    private Tristate culling, occluding, alwaysWaterlogged, randomOffset;
+
+    public BlockProperties() {
+        this.culling = Tristate.UNDEFINED;
+        this.occluding = Tristate.UNDEFINED;
+        this.alwaysWaterlogged = Tristate.UNDEFINED;
+        this.randomOffset = Tristate.UNDEFINED;
+    }
+
+    public BlockProperties(
+            Tristate culling,
+            Tristate occluding,
+            Tristate alwaysWaterlogged,
+            Tristate randomOffset
+    ) {
+        this.culling = culling;
+        this.occluding = occluding;
+        this.alwaysWaterlogged = alwaysWaterlogged;
+        this.randomOffset = randomOffset;
+    }
+
+    public boolean isCulling() {
+        return culling.getOr(true);
+    }
+
+    public boolean isOccluding() {
+        return occluding.getOr(true);
+    }
+
+    public boolean isAlwaysWaterlogged() {
+        return alwaysWaterlogged.getOr(false);
+    }
+
+    public boolean isRandomOffset() {
+        return randomOffset.getOr(false);
+    }
+
+    public Builder toBuilder() {
+        return new BlockProperties(
+                culling,
+                occluding,
+                alwaysWaterlogged,
+                randomOffset
+        ).new Builder();
+    }
+
+    public static Builder builder() {
+        return new BlockProperties().new Builder();
+    }
+
+    public class Builder {
+
+        public Builder culling(boolean culling) {
+            BlockProperties.this.culling = culling ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
+
+        public Builder occluding(boolean occluding) {
+            BlockProperties.this.occluding = occluding ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
+
+        public Builder alwaysWaterlogged(boolean alwaysWaterlogged) {
+            BlockProperties.this.alwaysWaterlogged = alwaysWaterlogged ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
+
+        public Builder randomOffset(boolean randomOffset) {
+            BlockProperties.this.randomOffset = randomOffset ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
+
+        public Builder from(BlockProperties other) {
+            culling = other.culling.getOr(culling);
+            occluding = other.occluding.getOr(occluding);
+            alwaysWaterlogged = other.alwaysWaterlogged.getOr(alwaysWaterlogged);
+            randomOffset = other.randomOffset.getOr(randomOffset);
+            return this;
+        }
+
+        public BlockProperties build() {
+            return BlockProperties.this;
+        }
+
+        public Tristate isCulling() {
+            return culling;
+        }
+
+        public Tristate isOccluding() {
+            return occluding;
+        }
+
+        public Tristate isAlwaysWaterlogged() {
+            return alwaysWaterlogged;
+        }
+
+        public Tristate isRandomOffset() {
+            return randomOffset;
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        return "BlockProperties{" +
+               "culling=" + culling +
+               ", occluding=" + occluding +
+               ", alwaysWaterlogged=" + alwaysWaterlogged +
+               ", randomOffset=" + randomOffset +
+               '}';
+    }
+
 }

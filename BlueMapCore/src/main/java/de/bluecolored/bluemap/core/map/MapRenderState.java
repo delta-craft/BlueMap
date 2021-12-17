@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.debug.DebugDump;
-import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 
 import java.io.*;
 import java.util.HashMap;
@@ -37,68 +36,63 @@ import java.util.zip.GZIPOutputStream;
 @DebugDump
 public class MapRenderState {
 
-	private final Map<Vector2i, Long> regionRenderTimes;
+    private final Map<Vector2i, Long> regionRenderTimes;
 
-	public MapRenderState() {
-		regionRenderTimes = new HashMap<>();
-	}
+    public MapRenderState() {
+        regionRenderTimes = new HashMap<>();
+    }
 
-	public synchronized void setRenderTime(Vector2i regionPos, long renderTime) {
-		regionRenderTimes.put(regionPos, renderTime);
-	}
+    public synchronized void setRenderTime(Vector2i regionPos, long renderTime) {
+        regionRenderTimes.put(regionPos, renderTime);
+    }
 
-	public synchronized long getRenderTime(Vector2i regionPos) {
-		Long renderTime = regionRenderTimes.get(regionPos);
-		if (renderTime == null) return -1;
-		else return renderTime;
-	}
+    public synchronized long getRenderTime(Vector2i regionPos) {
+        Long renderTime = regionRenderTimes.get(regionPos);
+        if (renderTime == null) return -1;
+        else return renderTime;
+    }
 
-	public synchronized void reset() {
-		regionRenderTimes.clear();
-	}
+    public synchronized void reset() {
+        regionRenderTimes.clear();
+    }
 
-	public synchronized void save(File file) throws IOException {
-		OutputStream fOut = AtomicFileHelper.createFilepartOutputStream(file);
-		GZIPOutputStream gOut = new GZIPOutputStream(fOut);
+    public synchronized void save(OutputStream out) throws IOException {
+        try (
+                DataOutputStream dOut = new DataOutputStream(new GZIPOutputStream(out))
+        ) {
+            dOut.writeInt(regionRenderTimes.size());
 
-		try (
-				DataOutputStream dOut = new DataOutputStream(gOut)
-		) {
-			dOut.writeInt(regionRenderTimes.size());
+            for (Map.Entry<Vector2i, Long> entry : regionRenderTimes.entrySet()) {
+                Vector2i regionPos = entry.getKey();
+                long renderTime = entry.getValue();
 
-			for (Map.Entry<Vector2i, Long> entry : regionRenderTimes.entrySet()) {
-				Vector2i regionPos = entry.getKey();
-				long renderTime = entry.getValue();
+                dOut.writeInt(regionPos.getX());
+                dOut.writeInt(regionPos.getY());
+                dOut.writeLong(renderTime);
+            }
 
-				dOut.writeInt(regionPos.getX());
-				dOut.writeInt(regionPos.getY());
-				dOut.writeLong(renderTime);
-			}
+            dOut.flush();
+        }
+    }
 
-			dOut.flush();
-		}
-	}
+    public synchronized void load(InputStream in) throws IOException {
+        regionRenderTimes.clear();
 
-	public synchronized void load(File file) throws IOException {
-		regionRenderTimes.clear();
+        try (
+                DataInputStream dIn = new DataInputStream(new GZIPInputStream(in))
+        ) {
+            int size = dIn.readInt();
 
-		try (
-				FileInputStream fIn = new FileInputStream(file);
-				GZIPInputStream gIn = new GZIPInputStream(fIn);
-				DataInputStream dIn = new DataInputStream(gIn)
-		) {
-			int size = dIn.readInt();
+            for (int i = 0; i < size; i++) {
+                Vector2i regionPos = new Vector2i(
+                        dIn.readInt(),
+                        dIn.readInt()
+                );
+                long renderTime = dIn.readLong();
 
-			for (int i = 0; i < size; i++) {
-				Vector2i regionPos = new Vector2i(
-						dIn.readInt(),
-						dIn.readInt()
-				);
-				long renderTime = dIn.readLong();
-
-				regionRenderTimes.put(regionPos, renderTime);
-			}
-		}
-	}
+                regionRenderTimes.put(regionPos, renderTime);
+            }
+        } catch (EOFException ignore){} // ignoring a sudden end of stream, since it is save to only read as many as we can
+    }
 
 }

@@ -26,6 +26,18 @@ package de.bluecolored.bluemap.core.world;
 
 public interface Chunk {
 
-	boolean isGenerated();
+    boolean isGenerated();
+
+    int getDataVersion();
+
+    BlockState getBlockState(int x, int y, int z);
+
+    LightData getLightData(int x, int y, int z, LightData target);
+
+    String getBiome(int x, int y, int z);
+
+    int getMaxY(int x, int z);
+
+    int getMinY(int x, int z);
 
 }

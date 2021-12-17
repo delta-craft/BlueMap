@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -35,56 +33,75 @@ import java.io.IOException;
 
 public abstract class MCAChunk implements Chunk {
 
-	private final int dataVersion;
-	
-	protected MCAChunk() {
-		this.dataVersion = -1;
-	}
-	
-	protected MCAChunk(CompoundTag chunkTag) {
-		dataVersion = chunkTag.getInt("DataVersion");
-	}
+    private final MCAWorld world;
+    private final int dataVersion;
 
-	@Override
-	public abstract boolean isGenerated();
-	
-	public int getDataVersion() {
-		return dataVersion;
-	}
-	
-	public abstract BlockState getBlockState(Vector3i pos);
-	
-	public abstract LightData getLightData(Vector3i pos);
-	
-	public abstract Biome getBiome(int x, int y, int z);
+    protected MCAChunk() {
+        this.world = null;
+        this.dataVersion = -1;
+    }
 
-	public int getMaxY(int x, int z) {
-		return 255;
-	}
+    protected MCAChunk(MCAWorld world) {
+        this.world = world;
+        this.dataVersion = -1;
+    }
 
-	public int getMinY(int x, int z) {
-		return 0;
-	}
-	
-	public static MCAChunk create(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) throws IOException {
-		int version = chunkTag.getInt("DataVersion");
-		
-		if (version < 1400) return new ChunkAnvil112(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper(), world.getBlockIdMapper(), world::getForgeBlockIdMapping);
-		if (version < 2200) return new ChunkAnvil113(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper());
-		if (version < 2500) return new ChunkAnvil115(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper());
-		return new ChunkAnvil116(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper());
-	}
+    protected MCAChunk(MCAWorld world, CompoundTag chunkTag) {
+        this.world = world;
+        dataVersion = chunkTag.getInt("DataVersion");
+    }
 
-	public static MCAChunk empty() {
-		return EmptyChunk.INSTANCE;
-	}
+    @Override
+    public abstract boolean isGenerated();
 
-	@Override
-	public String toString() {
-		return "MCAChunk{" +
-			   "dataVersion=" + dataVersion +
-			   "isGenerated()=" + isGenerated() +
-			   '}';
-	}
+    @Override
+    public int getDataVersion() {
+        return dataVersion;
+    }
+
+    @Override
+    public abstract BlockState getBlockState(int x, int y, int z);
+
+    @Override
+    public abstract LightData getLightData(int x, int y, int z, LightData target);
+
+    @Override
+    public abstract String getBiome(int x, int y, int z);
+
+    @Override
+    public int getMaxY(int x, int z) {
+        return 255;
+    }
+
+    @Override
+    public int getMinY(int x, int z) {
+        return 0;
+    }
+
+    protected MCAWorld getWorld() {
+        return world;
+    }
+
+    public static MCAChunk create(MCAWorld world, CompoundTag chunkTag) throws IOException {
+        int version = chunkTag.getInt("DataVersion");
+
+        if (version < 2200) return new ChunkAnvil113(world, chunkTag);
+        if (version < 2500) return new ChunkAnvil115(world, chunkTag);
+        if (version < 2844) return new ChunkAnvil116(world, chunkTag);
+        return new ChunkAnvil118(world, chunkTag);
+    }
+
+    public static MCAChunk empty() {
+        return EmptyChunk.INSTANCE;
+    }
+
+    @Override
+    public String toString() {
+        return "MCAChunk{" +
+               "world=" + world +
+               "dataVersion=" + dataVersion +
+               "isGenerated()=" + isGenerated() +
+               '}';
+    }
 
 }
